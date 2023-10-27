@@ -1,0 +1,51 @@
+/* DashBoard.css */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+.dashboard {
+    display: flex;
+    height: 100vh;
+}
+
+.left-block {
+    width: 250px; /* Set a fixed width for the left block */
+    border: 1px solid #ccc; /* Add borders for styling */
+    background: #f0f0f0; /* Background color for the left block */
+    overflow-y: auto; /* Add scroll if content exceeds the height */
+}
+
+.header {
+    background: #333; /* Header background color */
+    color: #fff; /* Text color for the header */
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.logout-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.table {
+    width: 100%; /* Use the full width of the left block */
+}
+
+.table th {
+    background: #333; /* Table header background color */
+    color: #fff; /* Table header text color */
+    padding: 10px;
+    font-weight: bold;
+}
