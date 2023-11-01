@@ -50,10 +50,12 @@ const SignUp = () => {
    const response = await fetch("http://localhost:5000/signup",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(body)
+    body:JSON.stringify(body),
+    credentials:"include"
     });
+    console.log(response.status);
     if(response.status===200){
-      window.location="/";
+      window.location="/login";
     }else{
       console.log("something Wrong");
     }

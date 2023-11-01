@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+
 import './HomePage.css';
 
 const HomePage = () => {
@@ -15,6 +16,7 @@ const HomePage = () => {
     setPassword(e.target.value);
   };
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -25,14 +27,19 @@ const HomePage = () => {
       const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        credentials:"include",
+      
       });
-console.log(response.status)
-      if (response.status === 200) {
-        window.location = "/DashBoard";
+     response.json().then((data)=>{
+      if (data.status === "success") {
+        window.location = "/";
+        console.log(data);
       } else {
-        setErrorMessage("Email and password are incorrect. Please try again.");
+        setErrorMessage(data.message);
       }
+     })
+      
     } catch (error) {
       console.error(error);
       // Handle other errors here

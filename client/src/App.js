@@ -12,8 +12,8 @@ function App() {
         <div className='container'>
           <Routes>
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/" element={<HomePage />} />
-            <Route path="/DashBoard" element={<DashBoard />} />
+            <Route path="/login" element={<HomePage />} />
+            <Route path="/" element={<DashBoard />} />
           </Routes>
         </div>
       </Fragment>
