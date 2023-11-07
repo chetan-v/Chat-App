@@ -27,7 +27,7 @@ body {
 }
 
 .header {
-  background: #333; /* Header background color */
+  background: #194370; /* Header background color */
   color: #fff; /* Text color for the header */
   padding: 10px;
   display: flex;
@@ -62,13 +62,13 @@ h1 {
 /* sidebar css */
 .sidebar {
   flex: 1;
-  background-color: #3e3c61;
+  background-color: #194370;
   position: relative;
 
   .navbar {
     display: flex;
     align-items: center;
-    background-color: #2f2d52;
+    background-color: #194370;
     height: 50px;
     padding: 10px;
     justify-content: space-between;
@@ -189,7 +189,7 @@ h1 {
 .table th {
   position: sticky;
   top: 0;
-  background-color: #333;
+  background-color: #194370;
   color: #fff;
   font-weight: bold;
   padding: 10px;
@@ -227,34 +227,70 @@ h1 {
   position: relative;
 }
 .chat-header{
+  margin: 0%;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 10px;
+  position: sticky; /* Make the header stick to the top */
+  top: 0;
+  z-index: 2; /* Ensure the header appears above the chat screen */ 
 }
+.chat-header button{
+  background-color: #194370;
+  border-radius: 7px;
+  margin-bottom: 10px;
+}
+.chat-header h2{
+  color: #fff;
+  font-size: 20px;
+  margin: 0;
+}
+/* .chat-header .user-info {
+  display: flex;
+  align-items: center;
+} */
 
+/* .chat-header img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+} */
 .chat-screen {
   flex: 1; /* Make the chat screen take available space */
-  max-height: calc(100% - 50px); /* Adjust the height of the chat screen and input area */
+  max-height: calc(100% - 80px); /* Adjust the height of the chat screen and input area */
   overflow-y: auto;
-  padding: 10px;
+  /* padding: 10px; */
   border: 1px solid #ccc;
 }
 
 
 .message {
   margin: 5px;
-  padding: 8px;
+  padding: 10px;
   border-radius: 5px;
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .received {
-  background-color: #e0e0e0;
+  margin-right: auto;
+  border-radius: 18px 18px 18px 0px;
+  background-color: rgb(212, 203, 203);
   text-align: left;
+  max-width: 400px;
 }
 
 .sent {
-  background-color: #e0e0e0;
-  text-align: right;
+  margin-left: auto;
+  border-radius: 18px 18px 0px 18px;
+  background-color: #5388d3;
+  text-align: left;
+  color: white;
+  max-width: 400px;
 }
 
 .input-area {
@@ -265,6 +301,7 @@ h1 {
   bottom: 0;
   width: 100%;
   background-color: white; /* You can change the background color if needed */
+  z-index: 1;
 }
 
 #message-input {
@@ -277,9 +314,39 @@ h1 {
 #send-button {
   margin-left: 10px;
   margin-bottom: 10px;
-  background-color: #333;
+  background-color: #194370;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
+
+/* Define breakpoints for responsiveness */
+
+/* @media screen and (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .left-block {
+    width: 100%;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .right-block {
+    flex: 1;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .chat-screen {
+    max-height: calc(100% - 150px);
+  }
+
+  .input-area {
+    position: static;
+    padding: 10px;
+  }
+} */
+

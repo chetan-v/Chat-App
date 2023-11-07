@@ -126,7 +126,8 @@ const ChatSection = (SR_ids) => {
       <div className="chat-screen">
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
-          <button onClick={deleteWantedHandler}>X</button>
+          {/* <img src="profilepic.png" alt="Profile Picture"></img> */}
+          <button onClick={deleteWantedHandler}>Delete Chats</button>
         </div>
         {chat.map((item, index) => (
   <div
@@ -136,7 +137,7 @@ const ChatSection = (SR_ids) => {
     key={index}
   >
   
-    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >X</button>:<></>}</div>
+    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >x</button>:<></>}</div>
   </div>
 ))}
       </div>
@@ -148,6 +149,7 @@ const ChatSection = (SR_ids) => {
             placeholder="Type your message..."
             value={message}
             onChange={handleMessageChange}
+            autoComplete="off"
           />
           <button id="send-button" type="submit">
             Send
