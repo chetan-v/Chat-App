@@ -136,7 +136,7 @@ const ChatSection = (SR_ids) => {
     key={index}
   >
   
-    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >X</button>:<></>}</div>
+    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >x</button>:<></>}</div>
   </div>
 ))}
       </div>

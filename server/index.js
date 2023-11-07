@@ -258,10 +258,10 @@ app.post("/deletechat", verifyUser, async (req, res) => {
   }
 } );
 // create group
-app.post("/createGroup", async (req, res) => {
+app.post("/createGroup",verifyUser, async (req, res) => {
   try {
     
-    const user_id = req.body.user_id;
+    const user_id = req.user.user_id;
     const g_name = req.body.group_name;
     const selectedUserIds = req.body.selectedUserIds; // Array of selected user IDs
 
@@ -286,6 +286,19 @@ app.post("/createGroup", async (req, res) => {
     return res.status(500).json({ Status: "error", message: "An error occurred while creating the group." });
   }
 });
+//fetch groups
+app.get("/grouplist", verifyUser, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const result = await pool.query(
+      "SELECT * FROM groups WHERE group_id IN (SELECT g_id FROM members WHERE user_id = $1)",
+      [user_id]
+    );
+    return res.status(200).json({ Status: "success", list: result.rows });
+  } catch (error) {
+    console.log(error);
+  }
+} );
 app.delete("/deleteGroup/:groupId", async (req, res) => {
   try {
     const groupId = req.params.groupId;
@@ -326,12 +339,11 @@ app.post("/addmembers", async (req, res) => {
 } );
 
 //fetch groups members
-app.post("/fetchgroupmembers", async (req, res) => {
+app.get("/fetchgroupmembers",verifyUser, async (req, res) => {
   try {
-    const user_id = req.user.user_id;
+    const user_id = req.body.user_id;
     const result = await pool.query(
-      "SELECT u.name AS user_name, g.g_name FROM users u JOIN members m ON u.user_id = m.user_id JOIN groups g ON m.g_id = g.group_id;"
-      
+      "SELECT u.name FROM users u JOIN members m ON u.user_id = m.user_id JOIN groups g ON m.g_id = g.group_id WHERE g.group_id = (SELECT g_id FROM members WHERE user_id = $1);",
       [user_id]
     );
     return res.status(200).json({ Status: "success", list: result.rows });
@@ -339,6 +351,9 @@ app.post("/fetchgroupmembers", async (req, res) => {
     console.log(error);
   }
 } );
+
+//create group chat
+
 
 
 
