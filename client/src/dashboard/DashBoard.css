@@ -226,7 +226,10 @@ h1 {
   overflow: hidden;
   position: relative;
 }
-
+.chat-header{
+  display: flex;
+  justify-content: space-between;
+}
 
 .chat-screen {
   flex: 1; /* Make the chat screen take available space */
