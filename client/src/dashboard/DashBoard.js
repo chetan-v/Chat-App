@@ -121,6 +121,11 @@ const DashBoard = () => {
                   </tr>
                 ))}
             </tbody>
+            <thead>
+              <tr>
+                <th>Groups</th>
+              </tr>
+            </thead>
           </table>
         </div>
       </div>

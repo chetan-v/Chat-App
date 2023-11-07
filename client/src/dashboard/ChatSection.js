@@ -4,6 +4,7 @@ import {io} from "socket.io-client";
 
 const ChatSection = (SR_ids) => {
   const [message, setMessage] = useState("");
+  const [deleteWanted, setDeleteWanted] = useState(false);
   const [chat, setChat] = useState([]);
   const [socket, setSocket] = useState(null);
   useEffect(() => {
@@ -28,6 +29,7 @@ const ChatSection = (SR_ids) => {
     socket?.on("getMessage", (data) => {
       console.log(data);
       setChat([...chat, { receiver_id: data.receiver, msg: data.msg }]);
+      setMessage("");
       });
         
       return () => {
@@ -47,7 +49,7 @@ const ChatSection = (SR_ids) => {
       receiver_id: SR_ids.receiver_id,
       msg: message,
     });
-    setMessage("");
+   
     const body = {
       receiver_id: SR_ids.receiver_id ,
       msg: message,
@@ -63,8 +65,10 @@ const ChatSection = (SR_ids) => {
     });
     if (response.status === 200) {
       // Add the sent message to the chat state
+      
       setChat([...chat, { receiver_id: SR_ids.receiver_id, msg: message }]);
-       // Clear the message input field
+      setMessage("");
+      // Clear the message input field
     } else {
       console.log("Something went wrong");
     }
@@ -83,7 +87,7 @@ const ChatSection = (SR_ids) => {
       const data = await response.json();
       setChat(data.list);
 
-      console.log(data);
+      // console.log(data.list);
     } else {
       console.log("something Wrong");
     }
@@ -94,11 +98,35 @@ const ChatSection = (SR_ids) => {
     }
   }, [SR_ids.receiver_id]);
 
+  const deletechat = async (chat_id) => {
+       //e.preventDefault();
+    const body = {
+      chat_id: chat_id,
+    };
+    const response = await fetch("http://localhost:5000/deletechat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      credentials: "include",
+    });
+    console.log(response)
+    if (response.status === 200) {
+      const data = await response.json();
+      getChats();
+      console.log(data);
+    } else {
+      console.log("something Wrong");
+    }
+  }
+  const deleteWantedHandler = () => {
+    setDeleteWanted(!deleteWanted);
+  };
   return (
     <div className="chat-box">
       <div className="chat-screen">
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
+          <button onClick={deleteWantedHandler}>X</button>
         </div>
         {chat.map((item, index) => (
   <div
@@ -108,7 +136,7 @@ const ChatSection = (SR_ids) => {
     key={index}
   >
   
-    <div className="message-text">{item.msg}</div>
+    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >X</button>:<></>}</div>
   </div>
 ))}
       </div>
