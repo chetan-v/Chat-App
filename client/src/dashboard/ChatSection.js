@@ -132,7 +132,7 @@ const ChatSection = (SR_ids) => {
       <div className="chat-screen" ref={chatContainerRef}>
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
-          <button onClick={deleteWantedHandler}>Delete chats</button>
+          <button onClick={deleteWantedHandler}>Delete Chats</button>
         </div>
         {chat.map((item, index) => (
   <div
