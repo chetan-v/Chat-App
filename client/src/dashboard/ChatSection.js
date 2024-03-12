@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef,useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
 import {io} from "socket.io-client";
 
@@ -121,12 +121,17 @@ const ChatSection = (SR_ids) => {
   const deleteWantedHandler = () => {
     setDeleteWanted(!deleteWanted);
   };
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    // Scroll to the bottom of the chat container when chat updates
+    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  }, [chat]);
   return (
     <div className="chat-box">
-      <div className="chat-screen">
+      <div className="chat-screen" ref={chatContainerRef}>
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
-          {/* <img src="profilepic.png" alt="Profile Picture"></img> */}
           <button onClick={deleteWantedHandler}>Delete Chats</button>
         </div>
         {chat.map((item, index) => (
