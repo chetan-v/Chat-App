@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
 const ChatSection = (SR_ids) => {
   const [message, setMessage] = useState("");
@@ -9,34 +9,31 @@ const ChatSection = (SR_ids) => {
   const [socket, setSocket] = useState(null);
   useEffect(() => {
     setSocket(io("http://localhost:5001"));
-      return () => {
+    return () => {
       if (socket) {
         socket.disconnect();
       }
     };
-
   }, []);
-  
-  
+
   useEffect(() => {
     socket?.emit("addUser", SR_ids.sender_id);
     socket?.on("getUsers", (users) => {
       console.log("Active users", users);
     });
-    
-   
+
     // Listen for incoming messages and update the chat state
     socket?.on("getMessage", (data) => {
       console.log(data);
       setChat([...chat, { receiver_id: data.receiver, msg: data.msg }]);
       setMessage("");
-      });
-        
-      return () => {
+    });
+
+    return () => {
       if (socket) {
         socket.off("getMessage");
       }
-      };
+    };
   }, [socket, chat, SR_ids.sender_id]);
 
   const handleMessageChange = (e) => {
@@ -49,9 +46,9 @@ const ChatSection = (SR_ids) => {
       receiver_id: SR_ids.receiver_id,
       msg: message,
     });
-   
+
     const body = {
-      receiver_id: SR_ids.receiver_id ,
+      receiver_id: SR_ids.receiver_id,
       msg: message,
     };
     if (!message) {
@@ -65,7 +62,7 @@ const ChatSection = (SR_ids) => {
     });
     if (response.status === 200) {
       // Add the sent message to the chat state
-      
+
       setChat([...chat, { receiver_id: SR_ids.receiver_id, msg: message }]);
       setMessage("");
       // Clear the message input field
@@ -99,7 +96,7 @@ const ChatSection = (SR_ids) => {
   }, [SR_ids.receiver_id]);
 
   const deletechat = async (chat_id) => {
-       //e.preventDefault();
+    //e.preventDefault();
     const body = {
       chat_id: chat_id,
     };
@@ -109,7 +106,7 @@ const ChatSection = (SR_ids) => {
       body: JSON.stringify(body),
       credentials: "include",
     });
-    console.log(response)
+    console.log(response);
     if (response.status === 200) {
       const data = await response.json();
       getChats();
@@ -117,29 +114,40 @@ const ChatSection = (SR_ids) => {
     } else {
       console.log("something Wrong");
     }
-  }
+  };
   const deleteWantedHandler = () => {
     setDeleteWanted(!deleteWanted);
   };
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    // Scroll to the bottom of the chat container when chat updates
+    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  }, [chat]);
   return (
     <div className="chat-box">
-      <div className="chat-screen">
+      <div className="chat-screen" ref={chatContainerRef}>
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
-          {/* <img src="profilepic.png" alt="Profile Picture"></img> */}
           <button onClick={deleteWantedHandler}>Delete Chats</button>
         </div>
         {chat.map((item, index) => (
-  <div
-    className={`message ${
-      item.receiver_id === SR_ids.receiver_id ? "sent" : "received"
-    }`}
-    key={index}
-  >
-  
-    <div className="message-text">{item.msg}{deleteWanted?<button onClick={()=>deletechat(item.chat_id)} >x</button>:<></>}</div>
-  </div>
-))}
+          <div
+            className={`message ${
+              item.receiver_id === SR_ids.receiver_id ? "sent" : "received"
+            }`}
+            key={index}
+          >
+            <div className="message-text">
+              {item.msg}
+              {deleteWanted ? (
+                <button onClick={() => deletechat(item.chat_id)}>x</button>
+              ) : (
+                <></>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
       <form onSubmit={handleChat}>
         <div className="input-area">

@@ -9,12 +9,14 @@ const DashBoard = () => {
   const [email, setEmail] = useState("");
   const [list, setList] = useState([]);
   const [receiverName, setReceiverName] = useState("");
-  const [chatUserId, setChatUserId] = useState(null);
+  const [chatUserId, setChatUserId] = useState(false);
+  const [GroupChatUserId, setGroupChatUserId] = useState(false);
   const [sender_id, setSender_id] = useState("");
+  const [groupList, setGroupList] = useState([]);
   useEffect(() => {
     const getDashboard = async () => {
       try {
-        const response = await fetch("http://localhost:5000/", {
+        const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -42,7 +44,7 @@ const DashBoard = () => {
   const handleLogOut = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/logout", {
+      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -62,7 +64,7 @@ const DashBoard = () => {
   };
   const getList = async () => {
     try {
-      const response = await fetch("http://localhost:5000/list", {
+      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/list", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -85,11 +87,41 @@ const DashBoard = () => {
   }, []);
   const handleChat = (user_id) => {
     setChatUserId(user_id);
+    setGroupChatUserId(false);
     //  console.log(user_id);
-
     setReceiverName(list.find((item) => item.user_id === user_id).name);
-    // Set the user_id for the chat
-    // Open the chat section
+  
+  };
+  const getGroupList = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/grouplist", { 
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      response.json().then((data) => {
+        if (data.Status === "success") {
+          // console.log(data);
+          setGroupList(data.list);
+        } else {
+          setErrorMessage(data.message);
+        }
+      }
+      );
+    } catch (error) {
+      console.error(error);
+      // Handle other errors here
+    }
+  };
+  useEffect(() => {
+    getGroupList();
+  }, []);
+  const handleGroupChat = (group_id) => {
+    setGroupChatUserId(group_id);
+    setChatUserId(false);
+    //  console.log(user_id);
+    setReceiverName(groupList.find((item) => item.group_id === group_id).g_name);
+  
   };
 
   return auth ? (
@@ -126,11 +158,24 @@ const DashBoard = () => {
                 <th>Groups</th>
               </tr>
             </thead>
+            <tbody>
+              {groupList
+                .filter((item) => item.email !== email)
+                .map((item, index) => (
+                  <tr key={index}>
+                    <td onClick={() => handleGroupChat(item.group_id)}>
+                      {item.g_name}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
           </table>
         </div>
       </div>
       <div className="right-block">
         {chatUserId && <ChatSection receiver_id={chatUserId} name={receiverName} sender_id={sender_id}/>}
+        {GroupChatUserId && <ChatSection receiver_id={GroupChatUserId} name={receiverName} sender_id={sender_id} groupAuth={true}/>}
+      
       </div>
     </div>
   ) : (
