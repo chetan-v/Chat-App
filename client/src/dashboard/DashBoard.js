@@ -16,7 +16,7 @@ const DashBoard = () => {
   useEffect(() => {
     const getDashboard = async () => {
       try {
-        const response = await fetch("http://localhost:5000/", {
+        const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -44,7 +44,7 @@ const DashBoard = () => {
   const handleLogOut = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/logout", {
+      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -64,7 +64,7 @@ const DashBoard = () => {
   };
   const getList = async () => {
     try {
-      const response = await fetch("http://localhost:5000/list", {
+      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/list", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
