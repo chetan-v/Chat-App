@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const io = require("socket.io")(5001, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://chat-app-client-mu.vercel.app/",
   },
 });
 
@@ -19,7 +19,7 @@ app.use(express.json());
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["https://chat-app-client-mu.vercel.app/"],
     methods: ["GET", "POST"],
     credentials: true,
   })
