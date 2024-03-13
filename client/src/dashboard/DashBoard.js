@@ -16,7 +16,7 @@ const DashBoard = () => {
   useEffect(() => {
     const getDashboard = async () => {
       try {
-        const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/", {
+        const response = await fetch("http://localhost:5000/", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -29,7 +29,6 @@ const DashBoard = () => {
             setName(data.name);
             setEmail(data.email);
             setSender_id(data.user_id);
-            
           } else {
             setErrorMessage(data.message);
           }
@@ -44,7 +43,7 @@ const DashBoard = () => {
   const handleLogOut = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/logout", {
+      const response = await fetch("http://localhost:5000/logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -64,7 +63,7 @@ const DashBoard = () => {
   };
   const getList = async () => {
     try {
-      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/list", {
+      const response = await fetch("http://localhost:5000/list", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -90,11 +89,10 @@ const DashBoard = () => {
     setGroupChatUserId(false);
     //  console.log(user_id);
     setReceiverName(list.find((item) => item.user_id === user_id).name);
-  
   };
   const getGroupList = async () => {
     try {
-      const response = await fetch("http://localhost:5000/grouplist", { 
+      const response = await fetch("http://localhost:5000/grouplist", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -106,8 +104,7 @@ const DashBoard = () => {
         } else {
           setErrorMessage(data.message);
         }
-      }
-      );
+      });
     } catch (error) {
       console.error(error);
       // Handle other errors here
@@ -120,8 +117,9 @@ const DashBoard = () => {
     setGroupChatUserId(group_id);
     setChatUserId(false);
     //  console.log(user_id);
-    setReceiverName(groupList.find((item) => item.group_id === group_id).g_name);
-  
+    setReceiverName(
+      groupList.find((item) => item.group_id === group_id).g_name
+    );
   };
 
   return auth ? (
@@ -173,9 +171,21 @@ const DashBoard = () => {
         </div>
       </div>
       <div className="right-block">
-        {chatUserId && <ChatSection receiver_id={chatUserId} name={receiverName} sender_id={sender_id}/>}
-        {GroupChatUserId && <ChatSection receiver_id={GroupChatUserId} name={receiverName} sender_id={sender_id} groupAuth={true}/>}
-      
+        {chatUserId && (
+          <ChatSection
+            receiver_id={chatUserId}
+            name={receiverName}
+            sender_id={sender_id}
+          />
+        )}
+        {GroupChatUserId && (
+          <ChatSection
+            receiver_id={GroupChatUserId}
+            name={receiverName}
+            sender_id={sender_id}
+            groupAuth={true}
+          />
+        )}
       </div>
     </div>
   ) : (

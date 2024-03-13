@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
-import './HomePage.css';
+import "./HomePage.css";
 
 const HomePage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -16,30 +16,27 @@ const HomePage = () => {
     setPassword(e.target.value);
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const body = {
         email: email,
-        password: password
-      }
-      const response = await fetch("https://chat-app-server-roan-alpha.vercel.app/login", {
+        password: password,
+      };
+      const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        credentials:"include",
-      
+        credentials: "include",
       });
-     response.json().then((data)=>{
-      if (data.status === "success") {
-        window.location = "/";
-        console.log(data);
-      } else {
-        setErrorMessage(data.message);
-      }
-     })
-      
+      response.json().then((data) => {
+        if (data.status === "success") {
+          window.location = "/";
+          console.log(data);
+        } else {
+          setErrorMessage(data.message);
+        }
+      });
     } catch (error) {
       console.error(error);
       // Handle other errors here
