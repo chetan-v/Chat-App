@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const io = require("socket.io")(5001, {
   cors: {
-    origin: "https://chat-app-client-mu.vercel.app/",
+    origin: "http://localhost:3000",
   },
 });
 
@@ -19,7 +19,7 @@ app.use(express.json());
 // middleware
 app.use(
   cors({
-    origin: ["https://chat-app-client-mu.vercel.app/"],
+    origin: ["http://localhost:3000"],
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -207,6 +207,7 @@ app.post("/createchat", verifyUser, async (req, res) => {
       originalMsg,
       secretKey
     ).toString();
+    console.log(encryptedMsg);
     const result = await pool.query(
       "INSERT INTO chats (sender_id, receiver_id, msg) VALUES ($1, $2, $3) returning *",
       [sender_id, receiver_id, encryptedMsg]
@@ -229,6 +230,7 @@ app.post("/fetchchats", verifyUser, async (req, res) => {
       "SELECT * FROM chats LEFT JOIN users ON users.user_id=chats.sender_id WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1) ORDER BY chat_id",
       [sender_id, receiver_id]
     );
+    console.log(result.rows);
 
     const decryptedChats = result.rows.map((chat) => {
       // Decrypt the message with the shared secretKey
@@ -263,9 +265,9 @@ app.post("/deletechat", verifyUser, async (req, res) => {
   }
 });
 // create group
-app.post("/createGroup", verifyUser, async (req, res) => {
+app.post("/createGroup", async (req, res) => {
   try {
-    const user_id = req.user.user_id;
+    const user_id = req.body.user_id;
     const g_name = req.body.group_name;
     const selectedUserIds = req.body.selectedUserIds; // Array of selected user IDs
 
@@ -295,19 +297,6 @@ app.post("/createGroup", verifyUser, async (req, res) => {
         Status: "error",
         message: "An error occurred while creating the group.",
       });
-  }
-});
-//fetch groups
-app.get("/grouplist", verifyUser, async (req, res) => {
-  try {
-    const user_id = req.user.user_id;
-    const result = await pool.query(
-      "SELECT * FROM groups WHERE group_id IN (SELECT g_id FROM members WHERE user_id = $1)",
-      [user_id]
-    );
-    return res.status(200).json({ Status: "success", list: result.rows });
-  } catch (error) {
-    console.log(error);
   }
 });
 app.delete("/deleteGroup/:groupId", async (req, res) => {
@@ -367,20 +356,19 @@ app.post("/addmembers", async (req, res) => {
 });
 
 //fetch groups members
-app.get("/fetchgroupmembers", verifyUser, async (req, res) => {
+app.post("/fetchgroupmembers", async (req, res) => {
   try {
-    const user_id = req.body.user_id;
+    const user_id = req.user.user_id;
     const result = await pool.query(
-      "SELECT u.name FROM users u JOIN members m ON u.user_id = m.user_id JOIN groups g ON m.g_id = g.group_id WHERE g.group_id = (SELECT g_id FROM members WHERE user_id = $1);",
-      [user_id]
+      "SELECT u.name AS user_name, g.g_name FROM users u JOIN members m ON u.user_id = m.user_id JOIN groups g ON m.g_id = g.group_id;"[
+        user_id
+      ]
     );
     return res.status(200).json({ Status: "success", list: result.rows });
   } catch (error) {
     console.log(error);
   }
 });
-
-//create group chat
 
 // listen at 5000
 app.listen(5000, () => {
