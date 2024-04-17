@@ -198,6 +198,7 @@ app.post("/delete", verifyUser, async (req, res) => {
 const secretKey = "kutta";
 app.post("/createchat", verifyUser, async (req, res) => {
   try {
+    console.log(req.body);
     const sender_id = req.user.user_id;
     const receiver_id = req.body.receiver_id;
     const originalMsg = req.body.msg;
@@ -291,12 +292,10 @@ app.post("/createGroup", async (req, res) => {
       .json({ Status: "success", group: groupResult.rows[0] });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        Status: "error",
-        message: "An error occurred while creating the group.",
-      });
+    return res.status(500).json({
+      Status: "error",
+      message: "An error occurred while creating the group.",
+    });
   }
 });
 app.delete("/deleteGroup/:groupId", async (req, res) => {
@@ -322,20 +321,16 @@ app.delete("/deleteGroup/:groupId", async (req, res) => {
       [groupId]
     );
 
-    return res
-      .status(200)
-      .json({
-        Status: "success",
-        message: "Group and associated members deleted.",
-      });
+    return res.status(200).json({
+      Status: "success",
+      message: "Group and associated members deleted.",
+    });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        Status: "error",
-        message: "An error occurred while deleting the group.",
-      });
+    return res.status(500).json({
+      Status: "error",
+      message: "An error occurred while deleting the group.",
+    });
   }
 });
 
