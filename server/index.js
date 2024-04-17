@@ -1,4 +1,5 @@
 const express = require("express");
+
 const pool = require("./db");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -6,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+const { MongoClient } = require("mongodb");
 const io = require("socket.io")(5001, {
   cors: {
     origin: "http://localhost:3000",
@@ -33,7 +35,7 @@ io.on("connection", (socket) => {
   // console.log(socket.id + " connected");
   socket.on("addUser", (user_id) => {
     // console.log(user_id);
-    const ifExist = users.find((user) => user.user_id === user_id);
+    const ifExist = users.find((user) => user.userId === user_id);
     if (!ifExist) {
       const user = { user_id, socket_id: socket.id };
       users.push(user);
@@ -63,7 +65,30 @@ io.on("connection", (socket) => {
     // console.log(users+"disconnected");s
   });
 });
+//mongodb
+const uri =
+  "mongodb+srv://admin-chetan:password09@cluster0.g0ujokf.mongodb.net/dynamic_chat?retryWrites=true&w=majority&appName=Cluster0";
+const client = new MongoClient(uri);
+const connectDB = async () => {
+  try {
+    await client.connect();
+    console.log("connected to DB");
+  } catch (e) {
+    console.log(e);
+  }
+};
+connectDB();
+const db = client.db();
+// const connectToMongoDB = async () => {
+// 	try {
+// 		await mongoose.connect(uri);
+// 		console.log("Connected to MongoDB");
+// 	} catch (error) {
+// 		console.log("Error connecting to MongoDB", error.message);
+// 	}
+// };
 
+// connectToMongoDB();
 //routes
 
 app.post("/signup", async (req, res) => {
@@ -73,29 +98,39 @@ app.post("/signup", async (req, res) => {
     const email = req.body.email;
     const dob = req.body.dob;
     const gender = req.body.gender;
-    const existingUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
-    if (existingUser.rows.length > 0) {
-      return res.status(409).json({ message: "Email.already exist" });
+    try {
+      await client.connect();
+      console.log("connect to atlas");
+    } catch (e) {
+      console.log(e);
     }
-    bcrypt.hash(password, saltRounds, (err, hash) => {
-      try {
-        pool.query(
-          "INSERT INTO users (name,password,email,dob,gender) VALUES($1,$2,$3,$4,$5) returning *",
-          [name, hash, email, dob, gender]
-        );
-        console.log("user added");
-        return res.sendStatus(200);
-      } catch (error) {
-        console.log(error);
-      }
+
+    const existingUser = await db.collection("users").findOne({ email: email });
+    console.log(existingUser);
+
+    if (existingUser) {
+      return res.status(409).json({ message: "Email already exists" });
+    }
+
+    const hash = bcrypt.hashSync(password, saltRounds);
+
+    const result = await db.collection("users").insertOne({
+      name: name,
+      password: hash,
+      dob: dob,
+      gender: gender,
+      email: email,
     });
-  } catch (err) {
-    console.log(err.message);
+
+    console.log("Document inserted successfully:", result.insertedId);
+
+    return res.sendStatus(200);
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 // for verify user
 const verifyUser = (req, res, next) => {
   const token = req.cookies.token;
@@ -109,7 +144,7 @@ const verifyUser = (req, res, next) => {
         req.user = {
           name: decoded.name,
           email: decoded.email,
-          user_id: decoded.user_id,
+          user_id: decoded.userId,
         };
         next();
       }
@@ -123,48 +158,39 @@ app.get("/", verifyUser, (req, res) => {
     email: req.user.email,
     user_id: req.user.user_id,
   });
+  // console.log(req.user);
 });
 // login
 app.post("/login", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  pool.query(
-    "SELECT * FROM users WHERE email = $1;",
-    [email],
-    (err, result) => {
-      if (err) {
-        return res.status(400).json({ message: "bad request" });
-      }
-      if (result.rows.length > 0) {
-        bcrypt.compare(
-          password,
-          result.rows[0].password,
-          (bcryptErr, bcryptRes) => {
-            if (bcryptRes) {
-              const name = result.rows[0].name;
-              const email = result.rows[0].email;
-              const user_id = result.rows[0].user_id;
-              const token = jwt.sign(
-                { name, email, user_id },
-                "our-secret-key",
-                {
-                  expiresIn: "1h",
-                }
-              );
-              res.cookie("token", token);
 
-              return res.status(200).json({ status: "success" });
-            } else {
-              return res.status(401).json({ message: "wrong password" });
-            }
-          }
-        );
-      } else {
-        return res.status(401).json({ message: "wrong email" });
-      }
+  try {
+    const user = await db.collection("users").findOne({ email: email });
+
+    if (!user) {
+      return res.status(401).json({ message: "wrong email" });
     }
-  );
+
+    bcrypt.compare(password, user.password, (bcryptErr, bcryptRes) => {
+      if (bcryptRes) {
+        const { name, email, userId } = user;
+        const token = jwt.sign({ name, email, userId }, "our-secret-key", {
+          expiresIn: "1h",
+        });
+        res.cookie("token", token);
+
+        return res.status(200).json({ status: "success" });
+      } else {
+        return res.status(401).json({ message: "wrong password" });
+      }
+    });
+  } catch (err) {
+    console.error("Error finding user:", err);
+    return res.status(400).json({ message: "bad request" });
+  }
 });
+
 // logout
 app.get("/logout", (req, res) => {
   res.clearCookie("token");
@@ -198,9 +224,17 @@ app.post("/delete", verifyUser, async (req, res) => {
 const secretKey = "kutta";
 app.post("/createchat", verifyUser, async (req, res) => {
   try {
+    await client.connect();
+    console.log("connect to atlas");
+  } catch (e) {
+    console.log(e);
+  }
+  try {
+    console.log(req.user);
     const sender_id = req.user.user_id;
     const receiver_id = req.body.receiver_id;
     const originalMsg = req.body.msg;
+    console.log(sender_id, receiver_id, originalMsg);
 
     // Encrypt the message with the shared secretKey
     const encryptedMsg = CryptoJS.AES.encrypt(
@@ -208,12 +242,15 @@ app.post("/createchat", verifyUser, async (req, res) => {
       secretKey
     ).toString();
     console.log(encryptedMsg);
-    const result = await pool.query(
-      "INSERT INTO chats (sender_id, receiver_id, msg) VALUES ($1, $2, $3) returning *",
-      [sender_id, receiver_id, encryptedMsg]
-    );
+    const r = await db.collection("chats").insertOne({
+      senderId: sender_id,
+      receiverId: receiver_id,
+      msg: encryptedMsg,
+    });
+    console.log(r);
+    const result = "";
 
-    return res.status(200).json({ Status: "success", list: result.rows });
+    return res.status(200).json({ Status: "success", list: ["heloo", "fi"] });
   } catch (error) {
     console.log(error);
     res.status(500).json({ Status: "error", message: "Failed to create chat" });
@@ -225,14 +262,34 @@ app.post("/fetchchats", verifyUser, async (req, res) => {
   try {
     const sender_id = req.user.user_id;
     const receiver_id = req.body.receiver_id;
+    console.log(sender_id, receiver_id);
 
-    const result = await pool.query(
-      "SELECT * FROM chats LEFT JOIN users ON users.user_id=chats.sender_id WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1) ORDER BY chat_id",
-      [sender_id, receiver_id]
-    );
-    console.log(result.rows);
+    const result = await db
+      .collection("chats")
+      .aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "sender_id",
+            foreignField: "user_id",
+            as: "sender",
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { sender_id: sender_id, receiver_id: receiver_id },
+              { sender_id: receiver_id, receiver_id: sender_id },
+            ],
+          },
+        },
+        {
+          $sort: { chat_id: 1 }, // Optional: Sort by chat_id if needed
+        },
+      ])
+      .toArray();
 
-    const decryptedChats = result.rows.map((chat) => {
+    const decryptedChats = result.map((chat) => {
       // Decrypt the message with the shared secretKey
       const decryptedMsg = CryptoJS.AES.decrypt(chat.msg, secretKey).toString(
         CryptoJS.enc.Utf8
@@ -243,7 +300,7 @@ app.post("/fetchchats", verifyUser, async (req, res) => {
         msg: decryptedMsg,
       };
     });
-    console.log(decryptedChats);
+    // console.log(decryptedChats);
 
     return res.status(200).json({ Status: "success", list: decryptedChats });
   } catch (error) {
@@ -291,12 +348,10 @@ app.post("/createGroup", async (req, res) => {
       .json({ Status: "success", group: groupResult.rows[0] });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        Status: "error",
-        message: "An error occurred while creating the group.",
-      });
+    return res.status(500).json({
+      Status: "error",
+      message: "An error occurred while creating the group.",
+    });
   }
 });
 app.delete("/deleteGroup/:groupId", async (req, res) => {
@@ -322,20 +377,16 @@ app.delete("/deleteGroup/:groupId", async (req, res) => {
       [groupId]
     );
 
-    return res
-      .status(200)
-      .json({
-        Status: "success",
-        message: "Group and associated members deleted.",
-      });
+    return res.status(200).json({
+      Status: "success",
+      message: "Group and associated members deleted.",
+    });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        Status: "error",
-        message: "An error occurred while deleting the group.",
-      });
+    return res.status(500).json({
+      Status: "error",
+      message: "An error occurred while deleting the group.",
+    });
   }
 });
 
