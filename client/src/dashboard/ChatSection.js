@@ -19,7 +19,7 @@ const ChatSection = (SR_ids) => {
   useEffect(() => {
     socket?.emit("addUser", SR_ids.sender_id);
     socket?.on("getUsers", (users) => {
-      console.log("Active users", users);
+      // console.log("Active users", users);
     });
 
     // Listen for incoming messages and update the chat state
@@ -84,7 +84,7 @@ const ChatSection = (SR_ids) => {
       const data = await response.json();
       setChat(data.list);
 
-      // console.log(data.list);
+      console.log(data);
     } else {
       console.log("something Wrong");
     }

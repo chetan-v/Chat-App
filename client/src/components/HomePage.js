@@ -54,19 +54,42 @@ const HomePage = () => {
           <h2>Log In</h2>
           {errorMessage && <p className="error-message">{errorMessage}</p>}
           <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Email"
-              value={email}
-              onChange={handleEmailChange}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={handlePasswordChange}
-            />
-            <button type="submit">Log In</button>
+            <div>
+              <label className="label p-2">
+                <span className="text-base label-text">Email</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter email"
+                className="w-full input input-bordered h-10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="label">
+                <span className="text-base label-text">Password</span>
+              </label>
+              <input
+                type="password"
+                placeholder="Enter Password"
+                className="w-full input input-bordered h-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <button className="btn btn-primary">
+                {/* {loading ? (
+                  <span className="loading loading-spinner "></span>
+                ) : (
+                  "Login"
+                )} */}
+                login
+              </button>
+            </div>
           </form>
         </section>
       </main>

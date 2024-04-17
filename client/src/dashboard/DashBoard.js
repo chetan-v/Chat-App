@@ -21,11 +21,9 @@ const DashBoard = () => {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
         });
-        // console.log(response);
         response.json().then((data) => {
           if (data.Status === "success") {
             setAuth(true);
-            // console.log(data.user_id);
             setName(data.name);
             setEmail(data.email);
             setSender_id(data.user_id);
@@ -147,6 +145,7 @@ const DashBoard = () => {
                   <tr key={index}>
                     <td onClick={() => handleChat(item.user_id)}>
                       {item.name}
+                      {/* {console.log(item)} */}
                     </td>
                   </tr>
                 ))}
@@ -190,8 +189,7 @@ const DashBoard = () => {
     </div>
   ) : (
     <div>
-      <h1>Not Authenticated {errorMessage}</h1>
-      <Link to="/login"> Login </Link>
+      <Link to="/login">Login</Link>
     </div>
   );
 };
