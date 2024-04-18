@@ -1,19 +1,24 @@
-const express = require("express");
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+const pool = require("pg");
+import cors from "cors";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import CryptoJS from "crypto-js";
+// const { MongoClient } = require("mongodb");
+import socketIO from "socket.io";
 
-const pool = require("./db");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const CryptoJS = require("crypto-js");
-const { MongoClient } = require("mongodb");
-const io = require("socket.io")(5001, {
+const io = socketIO(5001, {
   cors: {
     origin: "http://localhost:3000",
   },
 });
 
+dotenv.config();
+console.log(process.env.PORT + "h");
 const saltRounds = 10;
 const app = express();
 
@@ -66,19 +71,8 @@ io.on("connection", (socket) => {
   });
 });
 //mongodb
-const uri =
-  "mongodb+srv://admin-chetan:password09@cluster0.g0ujokf.mongodb.net/dynamic_chat?retryWrites=true&w=majority&appName=Cluster0";
-const client = new MongoClient(uri);
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("connected to DB");
-  } catch (e) {
-    console.log(e);
-  }
-};
-connectDB();
-const db = client.db();
+
+// const db = client.db();
 // const connectToMongoDB = async () => {
 // 	try {
 // 		await mongoose.connect(uri);
@@ -144,7 +138,7 @@ const verifyUser = (req, res, next) => {
         req.user = {
           name: decoded.name,
           email: decoded.email,
-          user_id: decoded.userId,
+          user_id: decoded._id,
         };
         next();
       }
@@ -174,8 +168,8 @@ app.post("/login", async (req, res) => {
 
     bcrypt.compare(password, user.password, (bcryptErr, bcryptRes) => {
       if (bcryptRes) {
-        const { name, email, userId } = user;
-        const token = jwt.sign({ name, email, userId }, "our-secret-key", {
+        const { name, email, _id } = user;
+        const token = jwt.sign({ name, email, _id }, "our-secret-key", {
           expiresIn: "1h",
         });
         res.cookie("token", token);
@@ -200,8 +194,8 @@ app.get("/logout", (req, res) => {
 // get list
 app.get("/list", verifyUser, async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM users");
-    return res.status(200).json({ Status: "success", list: result.rows });
+    const users = await db.collection("users").find({}).toArray();
+    return res.status(200).json({ Status: "success", list: users });
   } catch (error) {
     console.log(error);
   }
@@ -224,13 +218,13 @@ app.post("/delete", verifyUser, async (req, res) => {
 const secretKey = "kutta";
 app.post("/createchat", verifyUser, async (req, res) => {
   try {
-    await client.connect();
-    console.log("connect to atlas");
-  } catch (e) {
-    console.log(e);
-  }
-  try {
-    console.log(req.user);
+    try {
+      await client.connect();
+      console.log("connect to atlas");
+    } catch (e) {
+      console.log(e);
+    }
+
     const sender_id = req.user.user_id;
     const receiver_id = req.body.receiver_id;
     const originalMsg = req.body.msg;
@@ -250,7 +244,7 @@ app.post("/createchat", verifyUser, async (req, res) => {
     console.log(r);
     const result = "";
 
-    return res.status(200).json({ Status: "success", list: ["heloo", "fi"] });
+    return res.status(200).json({ Status: "success", list: r });
   } catch (error) {
     console.log(error);
     res.status(500).json({ Status: "error", message: "Failed to create chat" });
