@@ -85,8 +85,8 @@ const DashBoard = () => {
   const handleChat = (user_id) => {
     setChatUserId(user_id);
     setGroupChatUserId(false);
-    //  console.log(user_id);
-    setReceiverName(list.find((item) => item.user_id === user_id).name);
+    console.log(list);
+    setReceiverName(list.find((item) => item._id === user_id).name);
   };
   const getGroupList = async () => {
     try {
@@ -143,9 +143,9 @@ const DashBoard = () => {
                 .filter((item) => item.email !== email)
                 .map((item, index) => (
                   <tr key={index}>
-                    <td onClick={() => handleChat(item.user_id)}>
+                    <td onClick={() => handleChat(item._id)}>
                       {item.name}
-                      {/* {console.log(item)} */}
+                      {/* {console.log(item.name)} */}
                     </td>
                   </tr>
                 ))}
