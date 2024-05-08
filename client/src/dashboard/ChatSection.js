@@ -1,25 +1,20 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
-import { io } from "socket.io-client";
 
 const ChatSection = (SR_ids) => {
   const [message, setMessage] = useState("");
   const [deleteWanted, setDeleteWanted] = useState(false);
   const [chat, setChat] = useState([]);
-  const [socket, setSocket] = useState(null);
-  useEffect(() => {
-    setSocket(io("http://localhost:5001"));
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, []);
-
+  const isMessageEmpty = () => {
+    return message.trim() === "";
+  };
+  // setChat([]);
+  //socket connection
+  const socket = SR_ids.socket;
   useEffect(() => {
     socket?.emit("addUser", SR_ids.sender_id);
     socket?.on("getUsers", (users) => {
-      // console.log("Active users", users);
+      console.log("Active users", users);
     });
 
     // Listen for incoming messages and update the chat state
@@ -41,12 +36,15 @@ const ChatSection = (SR_ids) => {
   };
   const handleChat = async (e) => {
     e.preventDefault();
+    console.log("sender_id", SR_ids);
     socket?.emit("sendMessage", {
       sender_id: SR_ids.sender_id,
       receiver_id: SR_ids.receiver_id,
       msg: message,
     });
 
+    setChat([...chat, { receiverId: SR_ids.receiver_id, msg: message }]);
+    setMessage("");
     const body = {
       receiver_id: SR_ids.receiver_id,
       msg: message,
@@ -62,9 +60,6 @@ const ChatSection = (SR_ids) => {
     });
     if (response.status === 200) {
       // Add the sent message to the chat state
-
-      setChat([...chat, { receiver_id: SR_ids.receiver_id, msg: message }]);
-      setMessage("");
       // Clear the message input field
     } else {
       console.log("Something went wrong");
@@ -82,42 +77,19 @@ const ChatSection = (SR_ids) => {
     });
     if (response.status === 200) {
       const data = await response.json();
-      setChat(data.list);
 
-      console.log(data);
+      setChat(data.list);
     } else {
       console.log("something Wrong");
     }
   };
   useEffect(() => {
+    setChat([]);
     if (SR_ids.receiver_id) {
       getChats();
     }
   }, [SR_ids.receiver_id]);
 
-  const deletechat = async (chat_id) => {
-    //e.preventDefault();
-    const body = {
-      chat_id: chat_id,
-    };
-    const response = await fetch("http://localhost:5000/deletechat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
-    console.log(response);
-    if (response.status === 200) {
-      const data = await response.json();
-      getChats();
-      console.log(data);
-    } else {
-      console.log("something Wrong");
-    }
-  };
-  const deleteWantedHandler = () => {
-    setDeleteWanted(!deleteWanted);
-  };
   const chatContainerRef = useRef(null);
 
   useEffect(() => {
@@ -129,23 +101,15 @@ const ChatSection = (SR_ids) => {
       <div className="chat-screen" ref={chatContainerRef}>
         <div className="chat-header">
           <h1>{SR_ids.name}</h1>
-          <button onClick={deleteWantedHandler}>Delete Chats</button>
         </div>
         {chat.map((item, index) => (
           <div
             className={`message ${
-              item.receiver_id === SR_ids.receiver_id ? "sent" : "received"
+              item.receiverId === SR_ids.receiver_id ? "sent" : "received"
             }`}
             key={index}
           >
-            <div className="message-text">
-              {item.msg}
-              {deleteWanted ? (
-                <button onClick={() => deletechat(item.chat_id)}>x</button>
-              ) : (
-                <></>
-              )}
-            </div>
+            <div className="message-text">{item.msg}</div>
           </div>
         ))}
       </div>
@@ -159,7 +123,7 @@ const ChatSection = (SR_ids) => {
             onChange={handleMessageChange}
             autoComplete="off"
           />
-          <button id="send-button" type="submit">
+          <button id="send-button" type="submit" disabled={isMessageEmpty()}>
             Send
           </button>
         </div>

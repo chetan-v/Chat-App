@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
 import "./HomePage.css";
 
 const HomePage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [loading, setLoading] = useState(false);
+  const sighUp = () => {
+    window.location = "/signup";
+  };
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
   };
@@ -17,18 +19,24 @@ const HomePage = () => {
   };
 
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
     try {
       const body = {
         email: email,
         password: password,
       };
+      console.log(body);
       const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
         credentials: "include",
       });
+      if (response.status === 401) {
+        alert("Invalid credentials");
+        return;
+      }
       response.json().then((data) => {
         if (data.status === "success") {
           window.location = "/";
@@ -38,67 +46,68 @@ const HomePage = () => {
         }
       });
     } catch (error) {
-      console.error(error);
+      console.error(errorMessage);
       // Handle other errors here
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="homepage-container">
-      <header className="header">
-        <h1>Welcome to ChatNext</h1>
-      </header>
+    <div className="container-fluid">
+      <div className="row">
+        <div className="col-md-6 col-sm-12 sidenav">
+          <div className="login-main-text">
+            <h2>
+              Application
+              <br />
+              Login Page
+            </h2>
+            <p>Login or register from here to access.</p>
+          </div>
+        </div>
+        <div className="col-md-6 col-sm-12 main">
+          <div className="login-form">
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>User Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="User Name"
+                  value={email}
+                  onChange={handleEmailChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                />
+              </div>
+              <div className={`loading-container ${loading ? "" : "hide"}`}>
+                <div className="spinner"></div>
+              </div>
 
-      <main className="main-content">
-        <section className="login-section">
-          <h2>Log In</h2>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label className="label p-2">
-                <span className="text-base label-text">Email</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter email"
-                className="w-full input input-bordered h-10"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="label">
-                <span className="text-base label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                placeholder="Enter Password"
-                className="w-full input input-bordered h-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <button className="btn btn-primary">
-                {/* {loading ? (
-                  <span className="loading loading-spinner "></span>
-                ) : (
-                  "Login"
-                )} */}
-                login
+              <button type="submit" className="btn btn-black">
+                Login
               </button>
-            </div>
-          </form>
-        </section>
-      </main>
-
-      <footer className="footer">
-        <p>
-          Don't have an account? <Link to="/signup">Sign up here</Link>
-        </p>
-      </footer>
+              <button
+                onClick={sighUp}
+                type="submit"
+                className="btn btn-secondary"
+                disabled={loading}
+              >
+                Register
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

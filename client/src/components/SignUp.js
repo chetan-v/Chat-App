@@ -1,18 +1,20 @@
 import React, { useState } from "react";
-
+import "./SignUp.css";
 const SignUp = () => {
-  const [fname, setfname] = useState("");
-  const [lname, setlname] = useState("");
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [dob, setDOB] = useState("");
+  const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handlefnameChange = (e) => {
-    setfname(e.target.value);
+  const handleFnameChange = (e) => {
+    setFname(e.target.value);
   };
-  const handlelnameChange = (e) => {
-    setlname(e.target.value);
+
+  const handleLnameChange = (e) => {
+    setLname(e.target.value);
   };
 
   const handleEmailChange = (e) => {
@@ -23,8 +25,8 @@ const SignUp = () => {
     setPassword(e.target.value);
   };
 
-  const handleDOBChange = (e) => {
-    setDOB(e.target.value);
+  const handleDobChange = (e) => {
+    setDob(e.target.value);
   };
 
   const handleGenderChange = (e) => {
@@ -33,6 +35,13 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    if (!fname || !lname || !email || !password || !dob || !gender) {
+      alert("Please fill in all fields.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const body = {
@@ -49,13 +58,18 @@ const SignUp = () => {
         credentials: "include",
       });
       console.log(response.status);
-      if (response.status === 200) {
+      if (response.status === 409) {
+        alert("Email already exists");
+      } else if (response.status === 200) {
+        alert("Sign Up Successful");
         window.location = "/login";
       } else {
-        console.log("something Wrong");
+        console.log("Something went wrong");
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,7 +87,7 @@ const SignUp = () => {
                 id="first-name"
                 placeholder="Enter your first name"
                 value={fname}
-                onChange={handlefnameChange}
+                onChange={handleFnameChange}
               />
               <label htmlFor="lname">Last name</label>
               <input
@@ -82,7 +96,7 @@ const SignUp = () => {
                 id="last-name"
                 placeholder="Enter your last name"
                 value={lname}
-                onChange={handlelnameChange}
+                onChange={handleLnameChange}
               />
             </div>
 
@@ -117,7 +131,7 @@ const SignUp = () => {
                 className="form-control"
                 id="dob"
                 value={dob}
-                onChange={handleDOBChange}
+                onChange={handleDobChange}
               />
             </div>
 
@@ -136,7 +150,16 @@ const SignUp = () => {
               </select>
             </div>
 
-            <button type="submit" className="btn btn-primary">
+            {/* Loading indicator */}
+            <div className={`loading-container ${loading ? "" : "hide"}`}>
+              <div className="spinner"></div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
               Sign Up
             </button>
           </form>

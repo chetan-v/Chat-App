@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
 import { Link } from "react-router-dom";
 import ChatSection from "./ChatSection";
-const DashBoard = () => {
+import CreateGroup from "./CreateGroup";
+import GroupFetch from "./GroupFetch";
+const DashBoard = (socket) => {
   const [auth, setAuth] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [name, setName] = useState("");
@@ -85,7 +87,7 @@ const DashBoard = () => {
   const handleChat = (user_id) => {
     setChatUserId(user_id);
     setGroupChatUserId(false);
-    console.log(list);
+
     setReceiverName(list.find((item) => item._id === user_id).name);
   };
   const getGroupList = async () => {
@@ -129,6 +131,9 @@ const DashBoard = () => {
             Logout
           </button>
         </div>
+        <div>
+          <CreateGroup emailOfCreater={email} _idOfCreator={sender_id} />
+        </div>
 
         <div className="table-container">
           <table className="table">
@@ -150,7 +155,8 @@ const DashBoard = () => {
                   </tr>
                 ))}
             </tbody>
-            <thead>
+            {/* this is group section */}
+            {/* <thead>
               <tr>
                 <th>Groups</th>
               </tr>
@@ -165,7 +171,8 @@ const DashBoard = () => {
                     </td>
                   </tr>
                 ))}
-            </tbody>
+            </tbody> */}
+            <GroupFetch />
           </table>
         </div>
       </div>
@@ -175,6 +182,7 @@ const DashBoard = () => {
             receiver_id={chatUserId}
             name={receiverName}
             sender_id={sender_id}
+            socket={socket.socket}
           />
         )}
         {GroupChatUserId && (
