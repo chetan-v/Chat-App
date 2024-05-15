@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
 import { Link } from "react-router-dom";
 import ChatSection from "./ChatSection";
-import CreateGroup from "./CreateGroup";
-import GroupFetch from "./GroupFetch";
+// import CreateGroup from "./CreateGroup";
+// import GroupFetch from "./GroupFetch";
 const DashBoard = (socket) => {
   const [auth, setAuth] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -132,7 +132,7 @@ const DashBoard = (socket) => {
           </button>
         </div>
         <div>
-          <CreateGroup emailOfCreater={email} _idOfCreator={sender_id} />
+          {/* <CreateGroup emailOfCreater={email} _idOfCreator={sender_id} /> */}
         </div>
 
         <div className="table-container">
@@ -172,7 +172,7 @@ const DashBoard = (socket) => {
                   </tr>
                 ))}
             </tbody> */}
-            <GroupFetch />
+            {/* <GroupFetch /> */}
           </table>
         </div>
       </div>

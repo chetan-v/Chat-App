@@ -14,7 +14,7 @@ function CreateGroup({ emailOfCreater, _idOfCreator }) {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  console.log(groupName, selectedMembers);
+  // console.log(groupName, selectedMembers);
   useEffect(() => {
     // Simulate fetching members from an API
     // Replace this with your actual fetch logic
