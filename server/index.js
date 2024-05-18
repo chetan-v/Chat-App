@@ -1,20 +1,18 @@
 const express = require("express");
 require("dotenv").config();
 const connectToMongoDB = require("./db/connectToMDB.js");
-const pool = require("./db");
+// const pool = require("./db");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { login, signup, logout } = require("./controllers/auth.controller.js");
-const { list } = require("./controllers/members.controller.js");
-const { createGroup } = require("./controllers/createGroup.controller.js");
 const bodyParser = require("body-parser");
 const verifyUser = require("./middleware/securityRoute.js");
-const {
-  createChat,
-  fetchchats,
-} = require("./controllers/messages.controller.js");
-const { create } = require("./models/users.model.js");
-const app = express();
+const authRoutes = require("./routes/auth.routes.js");
+const userListRoutes = require("./routes/user.routes.js");
+const groupListRoutes = require("./routes/group.routes.js");
+const chatRoutes = require("./routes/chats.routes.js");
+
+// const { create } = require("./models/users.model.js");
+const { app, server } = require("./socket/socket.js");
 
 app.use(express.json());
 // middleware
@@ -27,7 +25,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-//socket
+
 // for verify user
 
 app.get("/", verifyUser, (req, res) => {
@@ -40,16 +38,14 @@ app.get("/", verifyUser, (req, res) => {
   // console.log(req.user);
 });
 //routes
-//signup
-app.post("/signup", signup);
-
-// login
-app.post("/login", login);
-// logout
-app.get("/logout", logout);
-
-// get list
-app.get("/list", verifyUser, list);
+//signup, login, logout
+app.use("/api/auth", authRoutes);
+//list of users
+app.use("/api/user", userListRoutes);
+//list of groups, create group
+app.use("/api/group", groupListRoutes);
+//chats of users one to one or group chats
+app.use("/api/chats", chatRoutes);
 // delete user
 app.post("/delete", verifyUser, async (req, res) => {
   try {
@@ -64,11 +60,6 @@ app.post("/delete", verifyUser, async (req, res) => {
   }
 });
 
-// create oneoneone chat
-app.post("/createchat", verifyUser, createChat);
-
-//fetch chats
-app.post("/fetchchats", verifyUser, fetchchats);
 //delete chat
 app.post("/deletechat", verifyUser, async (req, res) => {
   try {
@@ -83,8 +74,8 @@ app.post("/deletechat", verifyUser, async (req, res) => {
   }
 });
 // create group
-app.post("/creategroup", verifyUser, createGroup);
-//fetch groups cha
+
+//fetch groups
 
 app.delete("/deleteGroup/:groupId", async (req, res) => {
   try {
@@ -154,49 +145,10 @@ app.post("/groupmembers", async (req, res) => {
 });
 
 // listen at 5000
+
+//deployement
 const PORT = process.env.PORT;
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   connectToMongoDB();
   console.log(`Server Running on port ${PORT}`);
-});
-// console.log(server);
-const io = require("socket.io")(server, {
-  cors: {
-    origin: ["http://localhost:3000"],
-    // credentials: true,
-  },
-});
-// socket
-var users = [];
-io.on("connection", (socket) => {
-  socket.on("addUser", (user_id) => {
-    // console.log(socket.id);
-    const ifExist = users.find((user) => user.user_id === user_id);
-    if (!ifExist) {
-      const user = { user_id, socket_id: socket.id };
-      users.push(user);
-      io.emit("getUsers", users);
-    }
-
-    // console.log(users);
-  });
-  socket.on("sendMessage", ({ sender_id, receiver_id, msg }) => {
-    const receiver = users.find((user) => user.user_id === receiver_id);
-    const sender = users.find((user) => user.user_id === sender_id);
-
-    if (receiver) {
-      // Emit the message to both the sender and the receiver
-      io.to(receiver.socket_id).emit("getMessage", {
-        sender_id,
-        receiver_id,
-        msg,
-      });
-    }
-  });
-  socket.on("disconnect", () => {
-    // console.log(socket.id + " disconnected");
-    users = users.filter((user) => user.socket_id !== socket.id);
-    io.emit("getUsers", users);
-    // console.log(users+"disconnected");s
-  });
 });

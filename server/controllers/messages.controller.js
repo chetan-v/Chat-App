@@ -1,6 +1,8 @@
 const CryptoJS = require("crypto-js");
 const Chats = require("../models/chats.model");
+const GroupChat = require("../models/groupchat.model");
 
+// onr to ome chats
 const createChat = async (req, res) => {
   try {
     const sender_id = req.user.user_id;
@@ -61,7 +63,59 @@ const fetchchats = async (req, res) => {
   }
 };
 
+// group chats
+const createGroupChat = async (req, res) => {
+  try {
+    const senderId = req.user.user_id;
+    const groupId = req.body.group_id;
+    const originalMsg = req.body.msg;
+
+    // Encrypt the message with the shared secretKey
+    const encryptedMsg = CryptoJS.AES.encrypt(
+      originalMsg,
+      process.env.SECRET_CHAT_KEY
+    ).toString();
+
+    const newMessage = new GroupChat({
+      senderId,
+      groupId,
+      msg: encryptedMsg,
+    });
+    await newMessage.save();
+
+    return res.status(200).json({ Status: "success", newMessage });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ Status: "error", message: "Failed to create chat" });
+  }
+};
+
+const fetchGroupChats = async (req, res) => {
+  try {
+    const groupId = req.body.group_id;
+    const chats = await GroupChat.find({ groupId }).sort({ timestamp: 1 });
+
+    const decryptedChats = chats.map((chat) => {
+      const decryptedMsg = CryptoJS.AES.decrypt(
+        chat.msg,
+        process.env.SECRET_CHAT_KEY
+      ).toString(CryptoJS.enc.Utf8);
+      return {
+        ...chat.toObject(),
+        msg: decryptedMsg,
+      };
+    });
+
+    return res.status(200).json({ Status: "success", list: decryptedChats });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ Status: "error", message: "Failed to fetch chats" });
+  }
+};
+
 module.exports = {
   createChat,
   fetchchats,
+  createGroupChat,
+  fetchGroupChats,
 };

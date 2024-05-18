@@ -37,7 +37,26 @@ const createGroup = async (req, res) => {
     });
   }
 };
+const groupList = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // Assuming the user ID is available in req.user.id
+    console.log(userId);
+    // Find the groupIds where the user is a member
+    const memberRecords = await Members.find({ userId: userId }).select(
+      "groupId"
+    );
+    const groupIds = memberRecords.map((record) => record.groupId);
 
+    // Find the groups that match the groupIds
+    const groups = await Groups.find({ _id: { $in: groupIds } });
+
+    return res.status(200).json({ Status: "success", list: groups });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ Status: "error", message: "Server error" });
+  }
+};
 module.exports = {
   createGroup,
+  groupList,
 };
