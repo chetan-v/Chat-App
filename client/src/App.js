@@ -13,8 +13,8 @@ function App() {
         <div className="container">
           <Routes>
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/login" element={<HomePage />} />
-            <Route path="/" element={<DashBoard socket={socket} />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/home" element={<DashBoard socket={socket} />} />
           </Routes>
         </div>
       </Fragment>

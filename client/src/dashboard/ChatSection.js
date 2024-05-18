@@ -1,44 +1,62 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./DashBoard.css"; // Import your CSS file for styling
 
-const ChatSection = ({ receiver_id, sender_id, socket, name }) => {
+const ChatSection = ({
+  receiver_id,
+  sender_id,
+  socket,
+  name,
+  group_id,
+  groupAuth,
+}) => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const chatContainerRef = useRef(null);
+  const isGroupChat = groupAuth && group_id;
 
   useEffect(() => {
-    // console.log("Adding user to socket:", sender_id);
+    // Add user to socket connection
     socket?.emit("addUser", sender_id);
 
     socket?.on("getUsers", (users) => {
-      // console.log("Active users", users);
+      // Handle active users if needed
     });
 
     // Listen for incoming messages and update the chat state
     socket?.on("getMessage", (data) => {
-      // console.log("Received message:", data);
-      if (
-        (data.receiver_id === receiver_id && data.sender_id === sender_id) ||
-        (data.receiver_id === sender_id && data.sender_id === receiver_id)
-      ) {
-        setChat((prevChat) => [
-          ...prevChat,
-          { senderId: data.sender_id, msg: data.msg },
-        ]);
+      if (isGroupChat) {
+        if (data.group_id === group_id) {
+          setChat((prevChat) => [
+            ...prevChat,
+            { senderId: data.sender_id, msg: data.msg },
+          ]);
+        }
+      } else {
+        if (
+          (data.receiver_id === receiver_id && data.sender_id === sender_id) ||
+          (data.receiver_id === sender_id && data.sender_id === receiver_id)
+        ) {
+          setChat((prevChat) => [
+            ...prevChat,
+            { senderId: data.sender_id, msg: data.msg },
+          ]);
+        }
       }
     });
 
     return () => {
       if (socket) {
-        // console.log("Cleaning up socket listeners");
         socket.off("getMessage");
       }
     };
-  }, [socket, receiver_id, sender_id]);
+  }, [socket, receiver_id, sender_id, group_id, isGroupChat]);
 
   useEffect(() => {
     // Scroll to the bottom of the chat container when chat updates
-    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
   }, [chat]);
 
   const handleMessageChange = (e) => {
@@ -49,31 +67,26 @@ const ChatSection = ({ receiver_id, sender_id, socket, name }) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    console.log(
-      "Sending message:",
-      message,
-      "from:",
+    const messageData = {
       sender_id,
-      "to:",
-      receiver_id
-    );
-    socket?.emit("sendMessage", {
-      sender_id,
-      receiver_id,
       msg: message,
-    });
+    };
+
+    if (isGroupChat) {
+      messageData.group_id = group_id;
+    } else {
+      messageData.receiver_id = receiver_id;
+    }
+
+    socket?.emit("sendMessage", messageData);
 
     setChat((prevChat) => [...prevChat, { senderId: sender_id, msg: message }]);
     setMessage("");
 
-    const body = {
-      receiver_id,
-      msg: message,
-    };
-    const response = await fetch("http://localhost:5000/createchat", {
+    const response = await fetch("/api/chats/createchat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(messageData),
       credentials: "include",
     });
 
@@ -83,29 +96,28 @@ const ChatSection = ({ receiver_id, sender_id, socket, name }) => {
   };
 
   const getChats = async () => {
-    const body = {
-      receiver_id,
-    };
-    const response = await fetch("http://localhost:5000/fetchchats", {
+    const body = isGroupChat ? { group_id } : { receiver_id };
+    const response = await fetch("/api/chats/fetchchats", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       credentials: "include",
     });
+
     if (response.status === 200) {
       const data = await response.json();
       setChat(data.list);
     } else {
-      console.log("something Wrong");
+      console.log("Something went wrong");
     }
   };
 
   useEffect(() => {
     setChat([]);
-    if (receiver_id) {
+    if (receiver_id || group_id) {
       getChats();
     }
-  }, [receiver_id]);
+  }, [receiver_id, group_id]);
 
   return (
     <div className="chat-box">

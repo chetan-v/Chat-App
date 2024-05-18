@@ -27,7 +27,7 @@ const HomePage = () => {
         password: password,
       };
       console.log(body);
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -39,7 +39,7 @@ const HomePage = () => {
       }
       response.json().then((data) => {
         if (data.status === "success") {
-          window.location = "/";
+          window.location = "/home";
           console.log(data);
         } else {
           setErrorMessage(data.message);
@@ -58,12 +58,8 @@ const HomePage = () => {
       <div className="row">
         <div className="col-md-6 col-sm-12 sidenav">
           <div className="login-main-text">
-            <h2>
-              Application
-              <br />
-              Login Page
-            </h2>
-            <p>Login or register from here to access.</p>
+            <h2>ChatNext</h2>
+            <p>Login or SignUp from here to access.</p>
           </div>
         </div>
         <div className="col-md-6 col-sm-12 main">
@@ -102,7 +98,7 @@ const HomePage = () => {
                 className="btn btn-secondary"
                 disabled={loading}
               >
-                Register
+                Signup
               </button>
             </form>
           </div>
