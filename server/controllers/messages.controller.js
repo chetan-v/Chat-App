@@ -1,27 +1,64 @@
 const CryptoJS = require("crypto-js");
 const Chats = require("../models/chats.model");
 const GroupChat = require("../models/groupchat.model");
+const client = require("../redis/client");
 
 // onr to ome chats
+// const createChat = async (req, res) => {
+//   try {
+//     const sender_id = req.user.user_id;
+//     const receiver_id = req.body.receiver_id;
+//     const originalMsg = req.body.msg;
+//     // console.log(sender_id, receiver_id, originalMsg);
+
+//     // Encrypt the message with the shared secretKey
+//     const encryptedMsg = CryptoJS.AES.encrypt(
+//       originalMsg,
+//       process.env.SECRET_CHAT_KEY
+//     ).toString();
+//     // console.log(encryptedMsg);
+//     const newMessage = new Chats({
+//       senderId: sender_id,
+//       receiverId: receiver_id,
+//       msg: encryptedMsg,
+//     });
+//     await newMessage.save();
+
+//     return res.status(200).json({ Status: "success", newMessage });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ Status: "error", message: "Failed to create chat" });
+//   }
+// };
 const createChat = async (req, res) => {
   try {
     const sender_id = req.user.user_id;
     const receiver_id = req.body.receiver_id;
     const originalMsg = req.body.msg;
-    // console.log(sender_id, receiver_id, originalMsg);
 
     // Encrypt the message with the shared secretKey
     const encryptedMsg = CryptoJS.AES.encrypt(
       originalMsg,
       process.env.SECRET_CHAT_KEY
     ).toString();
-    // console.log(encryptedMsg);
+
     const newMessage = new Chats({
       senderId: sender_id,
       receiverId: receiver_id,
       msg: encryptedMsg,
     });
     await newMessage.save();
+
+    // Cache the message in Redis
+    const messageObject = {
+      senderId: sender_id,
+      receiverId: receiver_id,
+      msg: encryptedMsg,
+    };
+    await client.saveMessage(
+      `chats:${sender_id}:${receiver_id}`,
+      messageObject
+    );
 
     return res.status(200).json({ Status: "success", newMessage });
   } catch (error) {
@@ -30,39 +67,98 @@ const createChat = async (req, res) => {
   }
 };
 
+// old logic without redis
+// const fetchchats = async (req, res) => {
+//   try {
+//     const senderId = req.user.user_id;
+//     const receiverId = req.body.receiver_id;
+//     // console.log(senderId);
+//     // console.log(receiverId);
+//     const chats = await Chats.find({
+//       $or: [
+//         { senderId, receiverId },
+//         { senderId: receiverId, receiverId: senderId },
+//       ],
+//     }).sort({ timestamp: 1 });
+
+//     // console.log(chats);
+
+//     const decryptedChats = chats.map((chat) => {
+//       const decryptedMsg = CryptoJS.AES.decrypt(
+//         chat.msg,
+//         process.env.SECRET_CHAT_KEY
+//       ).toString(CryptoJS.enc.Utf8);
+//       return {
+//         ...chat.toObject(),
+//         msg: decryptedMsg,
+//       };
+//     });
+
+//     return res.status(200).json({ Status: "success", list: decryptedChats });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ Status: "error", message: "Failed to fetch chats" });
+//   }
+// };
+
+// with redis we fetch
 const fetchchats = async (req, res) => {
   try {
     const senderId = req.user.user_id;
     const receiverId = req.body.receiver_id;
-    // console.log(senderId);
-    // console.log(receiverId);
-    const chats = await Chats.find({
-      $or: [
-        { senderId, receiverId },
-        { senderId: receiverId, receiverId: senderId },
-      ],
-    }).sort({ timestamp: 1 });
+    const redisKey = `chats:${senderId}:${receiverId}`;
 
-    // console.log(chats);
+    // Try to fetch messages from Redis
+    let messages = await client.fetchMessages(redisKey);
 
-    const decryptedChats = chats.map((chat) => {
-      const decryptedMsg = CryptoJS.AES.decrypt(
-        chat.msg,
-        process.env.SECRET_CHAT_KEY
-      ).toString(CryptoJS.enc.Utf8);
-      return {
-        ...chat.toObject(),
-        msg: decryptedMsg,
-      };
-    });
+    if (messages.length === 0) {
+      // If no messages in Redis, fetch from MongoDB
+      const chats = await Chats.find({
+        $or: [
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId },
+        ],
+      }).sort({ timestamp: 1 });
 
-    return res.status(200).json({ Status: "success", list: decryptedChats });
+      // Store encrypted messages in Redis
+      await Promise.all(
+        chats.map((chat) => client.saveMessage(redisKey, chat.toObject()))
+      );
+
+      // Decrypt the messages
+      messages = chats.map((chat) => {
+        const decryptedMsg = CryptoJS.AES.decrypt(
+          chat.msg,
+          process.env.SECRET_CHAT_KEY
+        ).toString(CryptoJS.enc.Utf8);
+        return {
+          ...chat.toObject(),
+          msg: decryptedMsg,
+        };
+      });
+    } else {
+      // Decrypt messages from Redis
+
+      // console.log("from redis");
+
+      messages = messages.map((chat) => {
+        const decryptedMsg = CryptoJS.AES.decrypt(
+          chat.msg,
+          process.env.SECRET_CHAT_KEY
+        ).toString(CryptoJS.enc.Utf8);
+        return {
+          ...chat,
+          msg: decryptedMsg,
+        };
+      });
+    }
+
+    return res.status(200).json({ Status: "success", list: messages });
   } catch (error) {
     console.log(error);
     res.status(500).json({ Status: "error", message: "Failed to fetch chats" });
   }
 };
-
 // group chats
 const createGroupChat = async (req, res) => {
   try {

@@ -52,7 +52,7 @@ const login = async (req, res) => {
       if (bcryptRes) {
         const { name, email, _id } = user;
         const token = jwt.sign({ name, email, _id }, process.env.SECRET_KEY, {
-          expiresIn: "1h",
+          expiresIn: "24h",
         });
         res.cookie("token", token);
 
