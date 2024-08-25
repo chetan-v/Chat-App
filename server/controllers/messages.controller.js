@@ -30,6 +30,8 @@ const client = require("../redis/client");
 //     res.status(500).json({ Status: "error", message: "Failed to create chat" });
 //   }
 // };
+
+//with redis
 const createChat = async (req, res) => {
   try {
     const sender_id = req.user.user_id;
