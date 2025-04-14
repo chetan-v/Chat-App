@@ -19,6 +19,7 @@ module.exports = {
         `messages:${receiver_id}`,
         JSON.stringify(message)
       );
+      await redisClient.expire(`messages:${receiver_id}`, 60 * 5);
     } catch (error) {
       console.error("Error saving message to Redis:", error);
     }

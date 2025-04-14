@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 
 const verifyUser = (req, res, next) => {
   const token = req.cookies.token;
+  const body = req.body;
+  // console.log(body);
 
   if (!token) {
     return res.status(403).json({ message: "token Expired" });

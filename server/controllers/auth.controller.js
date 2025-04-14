@@ -9,13 +9,13 @@ const signup = async (req, res) => {
     const email = req.body.email;
     const dob = req.body.dob;
     const gender = req.body.gender;
-    console.log(name);
+    // console.log(name);
 
     const existingUser = await User.findOne({ email });
     console.log(existingUser);
 
     if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" });
+      return res.status(409).json({  message: "Email already exists" });
     }
 
     const hash = bcrypt.hashSync(password, saltRounds);
